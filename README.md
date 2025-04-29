@@ -10,7 +10,8 @@
   - 第3章：有限状态机
 - [第4章：词法分析](docs/CP_4.html)
 - [第5章：自上而下语法分析](docs/CP_5.html)
-- 第6章：自下而上语法分析（编写中）
+- [第6章：自下而上语法分析基础](docs/CP_6.html)
+- 第7章：自下而上LR(k)分析方法（编写中）
 
 ## 关于笔记格式
 
@@ -28,5 +29,3 @@
 ## 在线阅读
 
 你可以直接访问[https://jishux2.github.io/compiler-principles-notes](https://jishux2.github.io/compiler-principles-notes)来在线阅读这些笔记。
-
-测试
