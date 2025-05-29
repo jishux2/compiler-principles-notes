@@ -168,9 +168,15 @@ $$
    \end{aligned}
    $$
 
-6. 从$I_4$出发，继续类似的计算直到不能产生新的项目集
+6. 从$I_4$出发，对于非终结符$T$：
+   $I_5=\text{GOTO}(I_4,T)$：
+   $$
+   \begin{aligned}
+   &E\rightarrow E+T\cdot
+   \end{aligned}
+   $$
 
-每个项目集代表了分析过程中的一个状态，我们需要考虑：
+这样我们得到了这个简单文法的完整LR(0)项目集规范族$C=\{I_0,I_1,I_2,I_3,I_4,I_5\}$。每个项目集代表了分析过程中的一个状态，我们需要考虑：
 1. 项目中点号$\cdot$后面的符号（可能的移进操作）
 2. 点号$\cdot$在最右端的项目（可能的归约操作）
 3. 通过$\text{GOTO}$函数连接不同的项目集（状态转换关系）
@@ -329,7 +335,7 @@ digraph LR0_DFA {
 
 ***
 
-让我解释活前缀在LR(0)自动机中的体现。
+让我来解释活前缀在LR(0)自动机中的体现。
 
 LR(0)自动机通过其状态和转换来识别活前缀。具体来说，一个串是活前缀，当且仅当它能使LR(0)自动机从初始状态$I_0$转换到某个有效状态。这个关系可以形式化地表示为：
 
@@ -362,19 +368,20 @@ C&\rightarrow cC|d
 \end{aligned}
 $$
 
-在分析输入串`ccd`的过程中：
+在分析输入串`ccdd`（这是一个合法的句子，因为$S\Rightarrow CC\Rightarrow Cd\Rightarrow cCd\Rightarrow ccCd\Rightarrow ccdd$）的过程中：
 
 | 步骤 | 状态栈 | 符号栈 | 输入串 | 动作 |
 |-----|--------|--------|--------|------|
-| 1 | $0$ | $\epsilon$ | $ccd\$$ | 移进到$I_1$ |
-| 2 | $0\,1$ | $c$ | $cd\$$ | 移进到$I_1$ |
-| 3 | $0\,1\,1$ | $cc$ | $d\$$ | 移进到$I_2$ |
-| 4 | $0\,1\,1\,2$ | $ccd$ | $\$$ | 按$C\rightarrow d$归约 |
-| 5 | $0\,1\,1\,5$ | $ccC$ | $\$$ | 按$C\rightarrow cC$归约 |
-| 6 | $0\,1\,3$ | $cC$ | $\$$ | 按$C\rightarrow cC$归约 |
-| 7 | $0\,3$ | $C$ | $\$$ | 移进到$I_6$ |
-| 8 | $0\,3\,6$ | $CC$ | $\$$ | 按$S\rightarrow CC$归约 |
-| 9 | $0\,4$ | $S$ | $\$$ | 按$S'\rightarrow S$归约（接受） |
+| 1 | $0$ | $\epsilon$ | $ccdd\$$ | 移进到$I_1$ |
+| 2 | $0\,1$ | $c$ | $cdd\$$ | 移进到$I_1$ |
+| 3 | $0\,1\,1$ | $cc$ | $dd\$$ | 移进到$I_2$ |
+| 4 | $0\,1\,1\,2$ | $ccd$ | $d\$$ | 按$C\rightarrow d$归约 |
+| 5 | $0\,1\,1\,5$ | $ccC$ | $d\$$ | 按$C\rightarrow cC$归约 |
+| 6 | $0\,1\,5$ | $cC$ | $d\$$ | 按$C\rightarrow cC$归约 |
+| 7 | $0\,3$ | $C$ | $d\$$ | 移进到$I_2$ |
+| 8 | $0\,3\,2$ | $Cd$ | $\$$ | 按$C\rightarrow d$归约 |
+| 9 | $0\,3\,6$ | $CC$ | $\$$ | 按$S\rightarrow CC$归约 |
+| 10 | $0\,4$ | $S$ | $\$$ | 按$S'\rightarrow S$归约（接受） |
 
 从这个分析过程我们可以看出活前缀在LR(0)自动机中的具体体现：
 
@@ -389,7 +396,7 @@ $$
    - 在状态$I_2$中的项目$C\rightarrow d\cdot$表示已找到一个完整句柄
 
 3. 活前缀的累积性：
-   - 符号栈中出现的所有内容$\{\epsilon,c,cc,ccd,ccC,cC,C,CC,S\}$都是活前缀
+   - 符号栈中出现的所有内容$\{\epsilon,c,cc,ccd,ccC,cC,C,Cd,CC,S\}$都是活前缀
    - 每个活前缀都能通过LR(0)自动机的状态转换得到确认
    - 活前缀集合反映了规范规约过程中的所有有效中间状态
 
@@ -500,10 +507,10 @@ $$
      - 所以$R_{I_1}=c|cc$
      - 从$I_0\xrightarrow{d}I_2$得到$d$
      - 从$I_1\xrightarrow{d}I_2$得到$cd$
-     - 所以$R_{I_2}=d|cd$
+     - 所以$R_{I_2}=d|cd|ccd$
    - 第二轮迭代：
      - $R_{I_1}=c|cc|ccc$
-     - $R_{I_2}=d|cd|ccd$
+     - $R_{I_2}=d|cd|ccd|cccd$
    - 继续迭代...最终得到：
      - $R_{I_1}=c^+$
      - $R_{I_2}=d|c^+d=c^*d$
@@ -525,6 +532,62 @@ $$
 1. 使用动态规划减少重复计算
 2. 采用正则表达式化简技术
 3. 识别特殊模式直接生成对应表达式
+
+***
+
+事实上，我们还可以借助Arden引理来更系统地求解这个问题。Arden引理指出：如果$P$和$Q$是正则语言，且$P$不包含空串$\epsilon$，那么方程$X=PX+Q$的唯一解是$X=P^*Q$。
+
+考虑同样的例子，我们已经得到可达状态集$V=\{I_0,I_1,I_2\}$和对应的转移图。现在我们用Arden引理来求解：
+
+1. 首先写出状态转移关系表$R_{ij}$：
+
+   |    | $I_0$ | $I_1$ | $I_2$ |
+   |----|-------|-------|-------|
+   | $I_0$ | $\emptyset$ | $c$ | $d$ |
+   | $I_1$ | $\emptyset$ | $c$ | $d$ |
+   | $I_2$ | $\emptyset$ | $\emptyset$ | $\emptyset$ |
+
+2. 对每个状态$i$，设$X_i$表示从该状态开始的所有可能路径的标号构成的正则表达式。由于我们要求所有活前缀，所有状态都是接受状态，可以列出方程组：
+
+   $$
+   \begin{aligned}
+   X_0&=cX_1+dX_2+\epsilon \\
+   X_1&=cX_1+dX_2+\epsilon \\
+   X_2&=\epsilon
+   \end{aligned}
+   $$
+
+3. 从后向前求解：
+   1. $X_2=\epsilon$（已知）
+   
+   2. 代入第二个方程：
+      $$
+      \begin{aligned}
+      X_1&=cX_1+d\epsilon+\epsilon \\
+      &=cX_1+d+\epsilon
+      \end{aligned}
+      $$
+      根据Arden引理：$X_1=c^*(d+\epsilon)$
+   
+   3. 代入第一个方程：
+      $$
+      \begin{aligned}
+      X_0&=cX_1+d\epsilon+\epsilon \\
+      &=c[c^*(d+\epsilon)]+d+\epsilon \\
+      &=cc^*(d+\epsilon)+d+\epsilon \\
+      &=c^+(d+\epsilon)+d+\epsilon \\
+      &=(c^+|\epsilon)(d+\epsilon) \\
+      &=c^*d?
+      \end{aligned}
+      $$
+
+因为$I_0$是初始状态，所以最终的正则表达式是$c^*d?$，这与我们之前通过转移图迭代构造得到的结果完全一致。
+
+这种基于Arden引理的方法相比之前的迭代构造法有以下优点：
+1. 计算过程更加理论化和系统化
+2. 可以直接应用成熟的NFA→RE转换算法
+3. 求解步骤更加清晰，不容易出错
+4. 证明过程更加严谨，结果的正确性有理论保证
 
 ***
 
@@ -1074,7 +1137,6 @@ SLR(1)的特点：
 
 具体例子参见[第七章作业前两题](CP_as/CP_as7.md)
 
-
 ***
 
 让我们来分析if-else语句的匹配问题。对于下面这个描述if-else结构的文法：
@@ -1179,3 +1241,269 @@ digraph LR0_DFA {
 ***
 
 关于运算符优先级和结合性规则如何消解LR分析中的冲突，可以参考[第七章作业](CP_as/CP_as7.md)，其中包含了几个典型的算术表达式文法实例及其详细的冲突处理过程。
+
+***
+
+让我详细讲解LR(1)项目及其构造方法。
+
+LR(1)项目引入了"向前看符号"的概念，每个项目都是一个二元组$[A\rightarrow\alpha\cdot\beta,a]$，其中：
+- $A\rightarrow\alpha\beta$是一个产生式
+- 点号$\cdot$表示当前分析位置
+- $a$是向前看符号（终结符或$\$$）
+
+一、LR(1)项目的基本概念
+
+1. 规范LR(1)项目的记法：
+   $$[A\rightarrow\alpha\cdot\beta,a]$$
+   这表示：
+   - 已经匹配了$\alpha$
+   - 期望匹配$\beta$
+   - 在$\beta$匹配完成后，向前看符号应该是$a$
+
+2. 向前看符号的含义：
+   - 只有当下一个输入符号是$a$时，才能使用$A\rightarrow\alpha\beta$进行归约
+   - 这比SLR(1)中使用FOLLOW集更精确
+
+二、LR(1)项目集的闭包计算
+
+给定一个LR(1)项目集$I$，其闭包$\text{CLOSURE}(I)$的计算规则：
+
+1. $I$中的所有项目都属于$\text{CLOSURE}(I)$
+
+2. 如果$[A\rightarrow\alpha\cdot B\beta,a]\in\text{CLOSURE}(I)$，且$B\rightarrow\gamma$是一个产生式：
+   - 对于每个终结符$b\in\text{FIRST}(\beta a)$
+   - $[B\rightarrow\cdot\gamma,b]$也属于$\text{CLOSURE}(I)$
+
+3. 重复步骤2直到不能添加新的项目
+
+举例说明闭包计算：
+考虑文法：
+$$
+\begin{aligned}
+S'&\rightarrow S \\
+S&\rightarrow CC \\
+C&\rightarrow cC|d
+\end{aligned}
+$$
+
+对于项目$[S'\rightarrow\cdot S,\$]$，其闭包计算过程：
+
+1. 初始项目：$[S'\rightarrow\cdot S,\$]$
+
+2. 由于点号后面是$S$，看产生式$S\rightarrow CC$：
+   - $\text{FIRST}(\$)=\{\$\}$
+   - 添加$[S\rightarrow\cdot CC,\$]$
+
+3. 对于$[S\rightarrow\cdot CC,\$]$，点号后面是$C$：
+   - $\text{FIRST}(C\$)=\{c,d\}$
+   - 添加：
+     - $[C\rightarrow\cdot cC,c]$
+     - $[C\rightarrow\cdot cC,d]$
+     - $[C\rightarrow\cdot d,c]$
+     - $[C\rightarrow\cdot d,d]$
+
+最终得到的闭包是：
+$$
+\begin{aligned}
+\text{CLOSURE}(\{[S'\rightarrow\cdot S,\$]\})=\{&[S'\rightarrow\cdot S,\$], \\
+&[S\rightarrow\cdot CC,\$], \\
+&[C\rightarrow\cdot cC,c], \\
+&[C\rightarrow\cdot cC,d], \\
+&[C\rightarrow\cdot d,c], \\
+&[C\rightarrow\cdot d,d]\}
+\end{aligned}
+$$
+
+三、LR(1)项目集的GOTO函数
+
+对于LR(1)项目集$I$和文法符号$X$，$\text{GOTO}(I,X)$的计算规则：
+
+1. 首先找出$I$中所有形如$[A\rightarrow\alpha\cdot X\beta,a]$的项目
+
+2. 将点号移到$X$之后，得到$[A\rightarrow\alpha X\cdot\beta,a]$
+
+3. 计算这些新项目集合的闭包
+
+即：
+$$\text{GOTO}(I,X)=\text{CLOSURE}(\{[A\rightarrow\alpha X\cdot\beta,a]|[A\rightarrow\alpha\cdot X\beta,a]\in I\})$$
+
+四、LR(1)项目集规范族的构造
+
+构造步骤：
+
+1. 计算初始项目集$I_0=\text{CLOSURE}(\{[S'\rightarrow\cdot S,\$]\})$
+
+2. 对于已经得到的项目集$I_i$：
+   - 对于每个文法符号$X$
+   - 如果$\text{GOTO}(I_i,X)$非空且不在已有的项目集中
+   - 将其作为新的项目集加入规范族
+
+3. 重复步骤2直到不能产生新的项目集
+
+五、LR(1)项目的特点：
+
+1. 优点：
+   - 提供了最精确的向前看信息
+   - 能处理更多的文法
+   - 不会产生虚假的冲突
+
+2. 缺点：
+   - 项目集数量可能非常大
+   - 构造过程复杂
+   - 需要更多的存储空间
+
+与其他分析方法的比较：
+1. 比LR(0)多了向前看符号
+2. 比SLR(1)的向前看信息更精确
+3. 是LALR(1)的基础
+
+这种精确的向前看信息使得LR(1)分析器能够处理几乎所有的确定性上下文无关文法，但由于其项目集数量庞大，实际中更常用的是LALR(1)分析器，它在保持LR(1)大部分分析能力的同时，大大减少了状态数量。
+
+***
+
+好的，我来详细讲解LR(1)分析表的构造过程。
+
+一、构造规则
+
+对于每个LR(1)项目集$I_i$，根据其中的项目类型按以下规则构造分析表：
+
+1. 如果$[A\rightarrow\alpha\cdot a\beta,b]\in I_i$（$a$是终结符），且$\text{GOTO}(I_i,a)=I_j$：
+   $$\text{ACTION}[i,a]=\text{shift }j$$
+
+2. 如果$[A\rightarrow\alpha\cdot,a]\in I_i$（$A\neq S'$）：
+   $$\text{ACTION}[i,a]=\text{reduce }A\rightarrow\alpha$$
+
+3. 如果$[S'\rightarrow S\cdot,\$]\in I_i$：
+   $$\text{ACTION}[i,\$]=\text{accept}$$
+
+4. 如果$\text{GOTO}(I_i,A)=I_j$（$A$是非终结符）：
+   $$\text{GOTO}[i,A]=j$$
+
+二、举例说明
+
+考虑文法：
+$$
+\begin{aligned}
+S'&\rightarrow S &(0)\\
+S&\rightarrow CC &(1)\\
+C&\rightarrow cC &(2)\\
+C&\rightarrow d &(3)
+\end{aligned}
+$$
+
+1. 首先构造LR(1)项目集：
+
+   $I_0$：
+   $$
+   \begin{aligned}
+   &[S'\rightarrow\cdot S,\$] \\
+   &[S\rightarrow\cdot CC,\$] \\
+   &[C\rightarrow\cdot cC,c] \\
+   &[C\rightarrow\cdot cC,d] \\
+   &[C\rightarrow\cdot d,c] \\
+   &[C\rightarrow\cdot d,d]
+   \end{aligned}
+   $$
+
+   $I_1$（由$I_0$经过$c$）：
+   $$
+   \begin{aligned}
+   &[C\rightarrow c\cdot C,c] \\
+   &[C\rightarrow c\cdot C,d] \\
+   &[C\rightarrow\cdot cC,c] \\
+   &[C\rightarrow\cdot cC,d] \\
+   &[C\rightarrow\cdot d,c] \\
+   &[C\rightarrow\cdot d,d]
+   \end{aligned}
+   $$
+
+   $I_2$（由$I_0$经过$d$）：
+   $$
+   \begin{aligned}
+   &[C\rightarrow d\cdot,c] \\
+   &[C\rightarrow d\cdot,d]
+   \end{aligned}
+   $$
+
+   $I_3$（由$I_0$经过$C$）：
+   $$
+   \begin{aligned}
+   &[S\rightarrow C\cdot C,\$] \\
+   &[C\rightarrow\cdot cC,\$] \\
+   &[C\rightarrow\cdot d,\$]
+   \end{aligned}
+   $$
+
+   $I_4$（由$I_1$经过$C$）：
+   $$
+   \begin{aligned}
+   &[C\rightarrow cC\cdot,c] \\
+   &[C\rightarrow cC\cdot,d]
+   \end{aligned}
+   $$
+
+   $I_5$（由$I_3$经过$C$）：
+   $$
+   \begin{aligned}
+   &[S\rightarrow CC\cdot,\$]
+   \end{aligned}
+   $$
+
+   $I_6$（由$I_0$经过$S$）：
+   $$
+   \begin{aligned}
+   &[S'\rightarrow S\cdot,\$]
+   \end{aligned}
+   $$
+
+2. 构造分析表：
+
+   | 状态 | ACTION |     |     | GOTO |     |     |
+   |-----|---------|-----|-----|------|-----|-----|
+   |     | $c$    | $d$ | $\$$ | $S$  | $C$ |
+   | 0   | $s_1$   | $s_2$ |     | 6    | 3   |
+   | 1   | $s_1$   | $s_2$ |     |      | 4   |
+   | 2   | $r_3$   | $r_3$ |     |      |     |
+   | 3   | $s_1$   | $s_2$ |     |      | 5   |
+   | 4   | $r_2$   | $r_2$ |     |      |     |
+   | 5   |         |     | $r_1$ |      |     |
+   | 6   |         |     | $\text{acc}$ |      |     |
+
+三、分析过程示例
+
+让我们分析输入串$cdd$：
+
+| 步骤 | 状态栈 | 符号栈 | 输入串 | 动作 |
+|------|--------|--------|--------|------|
+| 1 | $0$ | | $cdd\$$ | 移进，状态1 |
+| 2 | $0\,1$ | $c$ | $dd\$$ | 移进，状态2 |
+| 3 | $0\,1\,2$ | $cd$ | $d\$$ | 归约，$C\rightarrow d$ |
+| 4 | $0\,1\,4$ | $cC$ | $d\$$ | 归约，$C\rightarrow cC$ |
+| 5 | $0\,3$ | $C$ | $d\$$ | 移进，状态2 |
+| 6 | $0\,3\,2$ | $Cd$ | $\$$ | 归约，$C\rightarrow d$ |
+| 7 | $0\,3\,5$ | $CC$ | $\$$ | 归约，$S\rightarrow CC$ |
+| 8 | $0\,6$ | $S$ | $\$$ | 接受 |
+
+四、LR(1)分析的特点
+
+1. 优点：
+   - 能力最强，可以处理几乎所有的确定性上下文无关文法
+   - 分析精确，不会产生不必要的冲突
+   - 错误检测能力强
+
+2. 主要特征：
+   - 每个项目都带有精确的向前看符号
+   - 状态转换基于项目集和向前看符号
+   - 归约动作只对特定的向前看符号有效
+
+3. 与其他分析方法的比较：
+   - 比LR(0)多了向前看信息，能力更强
+   - 比SLR(1)使用更精确的向前看信息
+   - 生成的状态数通常比LALR(1)多
+
+4. 实现考虑：
+   - 状态数量可能很大，需要有效的存储方案
+   - 可以使用压缩技术减少分析表的大小
+   - 可以根据具体需求选择合适的实现方式
+
+由于LR(1)分析表可能非常大，实际编译器通常使用LALR(1)分析器，它在保持大部分分析能力的同时，显著减少了状态数量。
